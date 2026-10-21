@@ -15,4 +15,41 @@ for (const items of chars) {
   count = count + 1;
 }
 
-console.log(charToID);
+function encoding(atext) {
+  const alist = [];
+  for (const items of atext) {
+    alist.push(charToID.get(items));
+  }
+  return alist;
+}
+
+function decoding(alist) {
+  const collect = [];
+  for (const items of alist) {
+    collect.push(chars[items]);
+  }
+  return collect.join("");
+}
+
+const data = encoding(atext);
+
+const n = Math.floor(data.length * 0.9);
+const trainData = data.slice(0, n);
+const valData = data.slice(n);
+
+console.log(trainData.length, valData.length);
+
+function batching(data, snippetCount, snippetLen) {
+  const x = [];
+  const y = [];
+  for (let b = 0; b < snippetCount; b++) {
+    const start = Math.floor(Math.random() * (data.length - snippetLen));
+    x.push(data.slice(start, start + snippetLen));
+    y.push(data.slice(start + 1, start + snippetLen + 1));
+  }
+  return [x, y];
+}
+
+const [x, y] = batching(trainData, 4, 8);
+console.log(decoding(x[0]));
+console.log(decoding(y[0]));
