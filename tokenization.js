@@ -37,8 +37,6 @@ const n = Math.floor(data.length * 0.9);
 const trainData = data.slice(0, n);
 const valData = data.slice(n);
 
-console.log(trainData.length, valData.length);
-
 function batching(data, snippetCount, snippetLen) {
   const x = [];
   const y = [];
@@ -51,5 +49,17 @@ function batching(data, snippetCount, snippetLen) {
 }
 
 const [x, y] = batching(trainData, 4, 8);
-console.log(decoding(x[0]));
-console.log(decoding(y[0]));
+
+function embeddingTable(rows, listNum) {
+  const alist = [];
+  for (let count = 0; count < rows; count++) {
+    let newlist = [];
+    for (let count1 = 0; count1 < listNum; count1++) {
+      newlist.push((Math.random() - 0.5) * 0.2);
+    }
+    alist.push(newlist);
+  }
+  return alist;
+}
+
+const table1 = embeddingTable(chars.length, 16);
