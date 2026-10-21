@@ -15,4 +15,20 @@ for (const items of chars) {
   count = count + 1;
 }
 
-console.log(charToID);
+function encoding(atext) {
+  const alist = [];
+  for (const items of atext) {
+    alist.push(charToID.get(items));
+  }
+  return alist;
+}
+
+function decoding(alist) {
+  const collect = [];
+  for (const items of alist) {
+    collect.push(chars[items]);
+  }
+  return collect.join("");
+}
+
+console.log(decoding(encoding("hi")));
