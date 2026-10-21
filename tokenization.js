@@ -63,3 +63,17 @@ function embeddingTable(rows, listNum) {
 }
 
 const table1 = embeddingTable(chars.length, 16);
+
+function embeddingLookup(x) {
+  const result = [];
+  for (const items of x) {
+    const newlist = [];
+    for (const subjects of items) {
+      newlist.push([...table1[subjects]]);
+    }
+    result.push(newlist);
+  }
+  return result;
+}
+
+console.log(embeddingLookup(x));
