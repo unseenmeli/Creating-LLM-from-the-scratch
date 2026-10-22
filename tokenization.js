@@ -47,8 +47,8 @@ function batching(data, snippetCount, snippetLen) {
   }
   return [x, y];
 }
-
-const [x, y] = batching(trainData, 4, 8);
+const t = 8;
+const [x, y] = batching(trainData, 4, t);
 
 function embeddingTable(rows, listNum) {
   const alist = [];
@@ -76,4 +76,23 @@ function embeddingLookup(x) {
   return result;
 }
 
-console.log(embeddingLookup(x));
+const table2 = embeddingTable(t, 16);
+
+function addPositions(alist) {
+  const result = [];
+  for (const items of alist) {
+    const newlist = [];
+    for (let count = 0; count < items.length; count++) {
+      const row = [];
+      for (let count1 = 0; count1 < 16; count1++) {
+        row.push(items[count][count1] + table2[count][count1]);
+      }
+      newlist.push(row);
+    }
+    result.push(newlist);
+  }
+  return result;
+}
+
+const out = addPositions(embeddingLookup(x));
+console.log(out);
