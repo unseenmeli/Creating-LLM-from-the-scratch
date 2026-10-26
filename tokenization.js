@@ -95,4 +95,22 @@ function addPositions(alist) {
 }
 
 const out = addPositions(embeddingLookup(x));
-console.log(out);
+
+const headSize = 8;
+const Wq = embeddingTable(16, headSize);
+const Wk = embeddingTable(16, headSize);
+const Wv = embeddingTable(16, headSize);
+
+function matVec(vec, W) {
+  const result = [];
+  for (let j = 0; j < W[0].length; j++) {
+    let sum = 0;
+    for (let i = 0; i < vec.length; i++) {
+      sum = sum + vec[i] * W[i][j];
+    }
+    result.push(sum);
+  }
+  return result;
+}
+
+console.log(matVec([1, 2, 3], [[1, 0], [0, 1], [1, 1]]));
