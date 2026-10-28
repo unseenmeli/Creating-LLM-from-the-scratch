@@ -95,4 +95,33 @@ function addPositions(alist) {
 }
 
 const out = addPositions(embeddingLookup(x));
-console.log(out);
+
+function matmul(alist, table) {
+  const result = [];
+  for (let count = 0; count < alist.length; count++) {
+    const row = [];
+    for (let count1 = 0; count1 < table[0].length; count1++) {
+      let sum = 0;
+      for (let count2 = 0; count2 < table.length; count2++) {
+        sum = sum + alist[count][count2] * table[count2][count1];
+      }
+      row.push(sum);
+    }
+    result.push(row);
+  }
+  return result;
+}
+
+console.log(
+  matmul(
+    [
+      [1, 2, 3],
+      [4, 5, 6],
+    ],
+    [
+      [7, 8],
+      [9, 10],
+      [11, 12],
+    ],
+  ),
+);
