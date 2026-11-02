@@ -129,30 +129,6 @@ function matVec(vec, W) {
   return result;
 }
 
-console.log(
-  matmul(
-    [
-      [1, 2, 3],
-      [4, 5, 6],
-    ],
-    [
-      [7, 8],
-      [9, 10],
-      [11, 12],
-    ],
-  ),
-);
-console.log(
-  matVec(
-    [1, 2, 3],
-    [
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ],
-  ),
-);
-
 const matmulWq = matmul(out[0], Wq);
 const matmulWk = matmul(out[0], Wk);
 const matmulWv = matmul(out[0], Wv);
@@ -206,3 +182,48 @@ function casualMask(table) {
 }
 
 const masked = casualMask(dividedScores);
+
+function maskedRowMax(table) {
+  const result = [];
+  for (const items of table) {
+    let anum = -Infinity
+    for (const each of items) {
+      if (each > anum) {
+        anum = each
+      }
+    }
+    result.push(anum)
+  }
+  return result;
+}
+
+function subTr(table) {
+  const maxes = maskedRowMax(table)
+  const res = []
+  for (let count = 0; count<table.length; count++) {
+    let tempRes = []
+    for (const items of table[count]) {
+      tempRes.push(items - maxes[count])
+    }
+    res.push(tempRes)
+  }
+  return res;
+}
+
+function softmax(subtractedTable) {
+  const res = []
+  for (const items of subtractedTable) {
+    let tempRes = []
+    let total = 0
+    for (const each of items) {
+      total += Math.exp(each);
+    }
+    for (const each of items) {
+      tempRes.push(Math.exp(each) / count)
+    }
+    res.push(tempRes)
+  }
+  return res; 
+}
+
+console.log(softmax(subTr(masked)))
