@@ -112,10 +112,9 @@ function matmul(alist, table) {
   return result;
 }
 
-const headSize = 8;
-const Wq = embeddingTable(16, headSize);
-const Wk = embeddingTable(16, headSize);
-const Wv = embeddingTable(16, headSize);
+const embedSize = 16;
+const numHeads = 2;
+const headSize = embedSize / numHeads;
 
 function matVec(vec, W) {
   const result = [];
@@ -128,10 +127,6 @@ function matVec(vec, W) {
   }
   return result;
 }
-
-const matmulWq = matmul(out[0], Wq);
-const matmulWk = matmul(out[0], Wk);
-const matmulWv = matmul(out[0], Wv);
 
 function attentionScores(Q, K) {
   const result = [];
@@ -149,8 +144,6 @@ function attentionScores(Q, K) {
   return result;
 }
 
-const scores = attentionScores(matmulWq, matmulWk);
-
 function divisionScores(table) {
   const result = [];
   for (const items of table) {
@@ -162,8 +155,6 @@ function divisionScores(table) {
   }
   return result;
 }
-
-const dividedScores = divisionScores(scores);
 
 function casualMask(table) {
   const result = [];
@@ -180,8 +171,6 @@ function casualMask(table) {
   }
   return result;
 }
-
-const masked = casualMask(dividedScores);
 
 function maskedRowMax(table) {
   const result = [];
@@ -219,11 +208,54 @@ function softmax(subtractedTable) {
       total += Math.exp(each);
     }
     for (const each of items) {
-      tempRes.push(Math.exp(each) / count)
+      tempRes.push(Math.exp(each) / total)
     }
     res.push(tempRes)
   }
   return res; 
 }
 
-console.log(softmax(subTr(masked)))
+function attentionHead(seq, Wq, Wk, Wv) {
+  const Q = matmul(seq, Wq);
+  const K = matmul(seq, Wk);
+  const V = matmul(seq, Wv);
+  const scores = divisionScores(attentionScores(Q, K));
+  const weights = softmax(subTr(casualMask(scores)));
+  return matmul(weights, V);
+}
+
+const heads = [];
+for (let h = 0; h < numHeads; h++) {
+  heads.push({
+    Wq: embeddingTable(embedSize, headSize),
+    Wk: embeddingTable(embedSize, headSize),
+    Wv: embeddingTable(embedSize, headSize),
+  });
+}
+
+const Wo = embeddingTable(numHeads * headSize, embedSize);
+
+// headOutputs: list of [t][headSize] tables, one per head -> [t][numHeads * headSize]
+function concatHeads(headOutputs) {
+  const result = [];
+  for (let pos = 0; pos < headOutputs[0].length; pos++) {
+    let row = [];
+    for (const headOut of headOutputs) {
+      row = row.concat(headOut[pos]);
+    }
+    result.push(row);
+  }
+  return result;
+}
+
+// seq is [t][embedSize], returns [t][embedSize]
+function multiHeadAttention(seq) {
+  const headOutputs = [];
+  for (const head of heads) {
+    headOutputs.push(attentionHead(seq, head.Wq, head.Wk, head.Wv));
+  }
+  return matmul(concatHeads(headOutputs), Wo);
+}
+
+const mhaOut = out.map((seq) => multiHeadAttention(seq));
+console.log(mhaOut.length, mhaOut[0].length, mhaOut[0][0].length);
