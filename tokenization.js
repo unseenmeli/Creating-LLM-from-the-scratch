@@ -108,6 +108,10 @@ function matmul(alist, table) {
       row.push(sum);
     }
     result.push(row);
+  }
+  return result;
+}
+
 const headSize = 8;
 const Wq = embeddingTable(16, headSize);
 const Wk = embeddingTable(16, headSize);
@@ -138,4 +142,67 @@ console.log(
     ],
   ),
 );
-console.log(matVec([1, 2, 3], [[1, 0], [0, 1], [1, 1]]));
+console.log(
+  matVec(
+    [1, 2, 3],
+    [
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ],
+  ),
+);
+
+const matmulWq = matmul(out[0], Wq);
+const matmulWk = matmul(out[0], Wk);
+const matmulWv = matmul(out[0], Wv);
+
+function attentionScores(Q, K) {
+  const result = [];
+  for (let count = 0; count < Q.length; count++) {
+    const row = [];
+    for (let count1 = 0; count1 < K.length; count1++) {
+      let sum = 0;
+      for (let count2 = 0; count2 < Q[0].length; count2++) {
+        sum = sum + Q[count][count2] * K[count1][count2];
+      }
+      row.push(sum);
+    }
+    result.push(row);
+  }
+  return result;
+}
+
+const scores = attentionScores(matmulWq, matmulWk);
+
+function divisionScores(table) {
+  const result = [];
+  for (const items of table) {
+    const newlist = [];
+    for (const numbers of items) {
+      newlist.push(numbers / Math.sqrt(headSize));
+    }
+    result.push(newlist);
+  }
+  return result;
+}
+
+const dividedScores = divisionScores(scores);
+
+function casualMask(table) {
+  const result = [];
+  for (let count = 0; count < table.length; count++) {
+    const newlist = [];
+    for (let count1 = 0; count1 < table[0].length; count1++) {
+      if (count < count1) {
+        newlist.push(-Infinity);
+      } else {
+        newlist.push(table[count][count1]);
+      }
+    }
+    result.push(newlist);
+  }
+  return result;
+}
+
+const masked = casualMask(dividedScores);
