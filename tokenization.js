@@ -235,7 +235,6 @@ for (let h = 0; h < numHeads; h++) {
 
 const Wo = embeddingTable(numHeads * headSize, embedSize);
 
-// headOutputs: list of [t][headSize] tables, one per head -> [t][numHeads * headSize]
 function concatHeads(headOutputs) {
   const result = [];
   for (let pos = 0; pos < headOutputs[0].length; pos++) {
@@ -248,7 +247,6 @@ function concatHeads(headOutputs) {
   return result;
 }
 
-// seq is [t][embedSize], returns [t][embedSize]
 function multiHeadAttention(seq) {
   const headOutputs = [];
   for (const head of heads) {
@@ -258,4 +256,21 @@ function multiHeadAttention(seq) {
 }
 
 const mhaOut = out.map((seq) => multiHeadAttention(seq));
-console.log(mhaOut.length, mhaOut[0].length, mhaOut[0][0].length);
+
+function residualCon1(table1, table2) {
+  const res = [];
+  for (let count = 0; count<table1.length; count++) {
+    const outer = [];
+    for (let count1 = 0; count1<table1[0].length; count1++) {
+      const inner = []
+      for (let count2 = 0; count2<table1[0][0].length; count2++) {
+        inner.push(table1[count][count1][count2] + table2[count][count1][count2])
+      }
+      outer.push(inner);
+    }
+    res.push(outer)
+  }
+  return res;
+}
+
+const residual1 = residualCon1(out, mhaOut)
