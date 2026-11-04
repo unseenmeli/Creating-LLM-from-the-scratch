@@ -274,3 +274,58 @@ function residualCon1(table1, table2) {
 }
 
 const residual1 = residualCon1(out, mhaOut)
+
+const gamma = [];
+const beta = [];
+for (let count = 0; count < 16; count++) {
+  gamma.push(1)
+  beta.push(0)
+}
+
+const mean = function(row) {
+  let res = 0
+  for (const each of row) {
+    res += each;
+  }
+  res /= row.length;
+  return res;
+}
+
+const variance = function(row, m) {
+  let res = 0
+  for (const each of row) {
+    res += (each - m) * (each - m);
+  }
+  res /= row.length;
+  return res;
+}
+
+const normalizeRow = function(row) {
+  const m = mean(row);
+  const v = variance(row, m);
+  const result = [];
+  for (const each of row) {
+    result.push((each - m) / Math.sqrt(v + 0.00001));
+  }
+  return result;
+}
+
+function layerNorm(table, gamma, beta) {
+  let res = [];
+  for (const each of table) {
+    let beforeTemp = []
+    for (const components of each) {
+      const normComp = normalizeRow([...components]);
+      let temp = [];
+      for (let count = 0; count < normComp.length; count++) {
+        temp.push(normComp[count] * gamma[count] + beta[count]);
+      }
+      beforeTemp.push(temp)
+    }
+    res.push(beforeTemp);
+  }
+  return res;
+}
+
+const norm1 = layerNorm(residual1, gamma, beta);
+console.log(norm1)
