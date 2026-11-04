@@ -328,4 +328,53 @@ function layerNorm(table, gamma, beta) {
 }
 
 const norm1 = layerNorm(residual1, gamma, beta);
-console.log(norm1)
+
+const W1 = embeddingTable(16, 64);
+const W2 = embeddingTable(64, 16);
+
+let b1 = []
+let b2 = []
+for (let x = 1; x <= 64; x++) {
+  b1.push(0)
+  if (x % 4 == 0) {
+    b2.push(0)
+  }
+}
+
+const relu = function(row) {
+  const res = []
+  for (const items of row) {
+    res.push(Math.max(0, items));
+  }
+  return res
+}
+
+const addBias = function(row, bias) {
+  let res = []
+  for (let count = 0; count < row.length; count++) {
+    res.push(row[count] + bias[count]);
+  }
+  return res;
+}
+
+const feedForward = function(table) {
+  const res = [];
+  for (const seq of table) {
+    const widened = matmul(seq, W1);
+    const activated = [];
+    for (const row of widened) {
+      activated.push(relu(addBias(row, b1)));
+    }
+    const narrowed = matmul(activated, W2);
+    const seqRows = [];
+    for (const row of narrowed) {
+      seqRows.push(addBias(row, b2));
+    }
+    res.push(seqRows);
+  }
+  return res;
+}
+
+const ffOut = feedForward(norm1);
+
+console.log(ffOut)
