@@ -377,15 +377,42 @@ for (let count = 0; count < 16; count++) {
 }
 
 function transformerBlock(table) {
-  // Attention, then Add & Norm #1
   const mhaOut = table.map((seq) => multiHeadAttention(seq));
   const norm1 = layerNorm(residualCon1(table, mhaOut), gamma, beta);
-  // Feed-forward, then Add & Norm #2
   const ffOut = feedForward(norm1);
   return layerNorm(residualCon1(norm1, ffOut), gamma2, beta2);
 }
 
 const blockOut = transformerBlock(out);
 
-console.log(blockOut.length, blockOut[0].length, blockOut[0][0].length);
-console.log(blockOut[0][0]);
+const Wout = embeddingTable(16, chars.length)
+
+const logits = []
+for (let count = 0; count < blockOut.length; count++) {
+  logits.push(matmul(blockOut[count], Wout))
+}
+
+const probs = []
+for (const seq of logits) {
+  probs.push(softmax(subTr(seq)))
+}
+
+let rowSum = 0
+for (const each of probs[0][0]) {
+  rowSum += each
+}
+
+function loss(arg1, arg2) {
+  let total = 0;
+  let countPos = 0;
+  for (let c1 = 0; c1 < arg2.length; c1++) {
+    for (let c2 = 0; c2 < arg2[c1].length; c2++) {
+      const p = arg1[c1][c2][arg2[c1][c2]];
+      total += -Math.log(p);
+      countPos += 1;
+    }
+  }
+  return total / countPos;
+}
+
+console.log(loss(probs, y))
