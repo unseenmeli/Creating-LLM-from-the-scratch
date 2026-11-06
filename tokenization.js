@@ -255,8 +255,6 @@ function multiHeadAttention(seq) {
   return matmul(concatHeads(headOutputs), Wo);
 }
 
-const mhaOut = out.map((seq) => multiHeadAttention(seq));
-
 function residualCon1(table1, table2) {
   const res = [];
   for (let count = 0; count<table1.length; count++) {
@@ -272,8 +270,6 @@ function residualCon1(table1, table2) {
   }
   return res;
 }
-
-const residual1 = residualCon1(out, mhaOut)
 
 const gamma = [];
 const beta = [];
@@ -327,8 +323,6 @@ function layerNorm(table, gamma, beta) {
   return res;
 }
 
-const norm1 = layerNorm(residual1, gamma, beta);
-
 const W1 = embeddingTable(16, 64);
 const W2 = embeddingTable(64, 16);
 
@@ -375,6 +369,23 @@ const feedForward = function(table) {
   return res;
 }
 
-const ffOut = feedForward(norm1);
+const gamma2 = [];
+const beta2 = [];
+for (let count = 0; count < 16; count++) {
+  gamma2.push(1);
+  beta2.push(0);
+}
 
-console.log(ffOut)
+function transformerBlock(table) {
+  // Attention, then Add & Norm #1
+  const mhaOut = table.map((seq) => multiHeadAttention(seq));
+  const norm1 = layerNorm(residualCon1(table, mhaOut), gamma, beta);
+  // Feed-forward, then Add & Norm #2
+  const ffOut = feedForward(norm1);
+  return layerNorm(residualCon1(norm1, ffOut), gamma2, beta2);
+}
+
+const blockOut = transformerBlock(out);
+
+console.log(blockOut.length, blockOut[0].length, blockOut[0][0].length);
+console.log(blockOut[0][0]);
